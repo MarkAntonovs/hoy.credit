@@ -141,15 +141,11 @@
 /* ===== Loan calculator with offer matcher ===== */
 (function(){
   const offers = [
-    { name: "Fino.lk", min: 3000, max: 150000, link: "https://clickcrafter.eu/fino.lk/9is4591jin" },
-    { name: "Oncredit", min: 2000, max: 100000, link: "https://clickcrafter.eu/oncredit.lk/9is4591jin" },
-    { name: "Monigo", min: 3000, max: 150000, link: "https://clickcrafter.eu/monigo.lk/9is4591jin" },
-    { name: "CashX", min: 5000, max: 200000, link: "https://clickcrafter.eu/cashx.lk/9is4591jin" },
-    { name: "LoanPlus", min: 5000, max: 200000, link: "https://clickcrafter.eu/loanplus.lk/9is4591jin" },
-    { name: "Loanme", min: 8000, max: 80000, link: "https://clickcrafter.eu/loanme.lk/9is4591jin" },
-    { name: "Credify", min: 5000, max: 200000, link: "https://clickcrafter.eu/credify.lk/9is4591jin" },
-    { name: "SOScredit", min: 5000, max: 200000, link: "https://clickcrafter.eu/soscredit.lk/9is4591jin" },
-    { name: "SOSO", min: 5000, max: 200000, link: "https://clickcrafter.eu/soso.lk/9is4591jin" }
+    { name: "Credito-365", min: 100, max: 20000, link: "https://clickcrafter.eu/credito-365.mx/9is4591jin" },
+    { name: "Crezu", min: 100, max: 20000, link: "https://clickcrafter.eu/crezu.mx/9is4591jin" },
+    { name: "Credy", min: 1000, max: 30000, link: "https://clickcrafter.eu/credy.mx/9is4591jin" },
+    { name: "Dineria.mx", min: 1000, max: 35000, link: "https://clickcrafter.eu/dineria.mx/9is4591jin" },
+    { name: "Lanu.mx", min: 1000, max: 35000, link: "https://clickcrafter.eu/lanu.mx/9is4591jin" },
   ];
 
   const btn = document.getElementById("calcBtn");
@@ -172,10 +168,10 @@
     const total = amount * Math.pow(1 + rate, days);
     const overpay = total - amount;
     resultEl.innerHTML = `
-      💰 <strong>Total to repay:</strong> ${total.toFixed(2)} LKR<br>
-      📈 <strong>Interest:</strong> ${overpay.toFixed(2)} LKR<br>
-      ⏱ <strong>Term:</strong> ${days} days
-    `;
+💰 <strong>Total a pagar:</strong> ${total.toFixed(2)} MXN<br>
+📈 <strong>Interés:</strong> ${overpay.toFixed(2)} MXN<br>
+⏱ <strong>Plazo:</strong> ${days} días
+`;
     resultEl.style.color = "#1e3a8a";
 
     // === Offer matcher ===
