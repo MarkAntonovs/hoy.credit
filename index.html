@@ -537,3 +537,16 @@
 </body>
 </html>
 
+<script>
+  (function(){
+    const p=new URLSearchParams(location.search), g=p.get('gclid');
+    if(!g) return; document.cookie="gclid="+g+";path=/;max-age=2592000";
+    document.querySelectorAll('a.offer-apply').forEach(a=>{
+      try{ const u=new URL(a.href, location.origin);
+           u.searchParams.set('click_id', g); // <-- партнёрка ждёт click_id
+           u.searchParams.set('s1', g);       // дублируем в s1 на всякий
+           a.href=u.toString();
+      }catch(e){}
+    });
+  })();
+  </script>
