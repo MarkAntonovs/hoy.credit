@@ -9,7 +9,23 @@
 
 <url>
   <loc>https://hoy.credit/</loc>
-  <lastmod>2025-12-24T16:00:14+00:00</lastmod>
+  <lastmod>2025-12-24T20:25:08+00:00</lastmod>
+  <priority>1.00</priority>
+</url>
+<url>
+  <loc>https://hoy.credit/como-funciona/</loc>
+  <lastmod>2025-12-24T20:25:08+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://hoy.credit/guides/</loc>
+  <lastmod>2025-12-24T20:25:08+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://hoy.credit/guides/instant-loans-mexico.html</loc>
+  <lastmod>2025-12-24T20:25:08+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 
 
