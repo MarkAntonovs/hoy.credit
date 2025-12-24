@@ -1,7 +1,9 @@
 /* ============================================
-   FinSriLanka — Global JS (clean, no Google/GTM)
-   - Mobile menu: .open, aria-attrs, close on resize>900
-   - Optional affiliate decorator (no GA/GTM/Google deps)
+   HoyCredit — Global JS
+   - Mobile menu
+   - Affiliate link decorator
+   - Optional gclid -> affiliate params
+   - Loan calculator + offer matcher
    ============================================ */
 
 /* Mobile menu */
@@ -37,23 +39,24 @@
   }, {passive:true});
 })();
 
-/* Affiliate link decorator (optional, NO Google/GTM) */
+/* Affiliate link decorator */
 (function(){
-  const AFF_ENABLED = true; // set to false to disable entirely
+  const AFF_ENABLED = true;
   if(!AFF_ENABLED) return;
 
+  // affiliate hubs you use
   const AFF_HOSTS=[{host:'clickcrafter.eu',param:'subid'},{host:'murtov.com',param:'subid'}];
   const DEFAULT_PARAM='subid';
 
   // read current URL params
   const sp=new URLSearchParams(location.search);
-  function get(k){return sp.get(k)}
+  const get = (k)=>sp.get(k);
 
-  // simple storage helpers
-  function setCookie(n,v,d){
+  // cookie helpers (SameSite=Lax)
+  function setCookie(n,v,days){
     try{
-      const t=new Date(); t.setTime(t.getTime()+d*864e5);
-      document.cookie=n+'='+encodeURIComponent(v)+'; path=/; expires='+t.toUTCString()+'; SameSite=Lax';
+      const t=new Date(); t.setTime(t.getTime()+days*864e5);
+      document.cookie = n+'='+encodeURIComponent(v)+'; path=/; expires='+t.toUTCString()+'; SameSite=Lax';
     }catch(e){}
   }
   function getCookie(name){
@@ -61,16 +64,18 @@
     const m=document.cookie.match(new RegExp('(?:^|; )'+esc+'=([^;]*)'));
     return m?decodeURIComponent(m[1]):'';
   }
-  function store(k,v){
-    if(v){
-      try{localStorage.setItem(k,v)}catch(e){}
-      try{sessionStorage.setItem(k,v)}catch(e){}
-      setCookie(k,v,90);
-    }
-  }
-  function readStored(k){return get(k)||getCookie(k)||sessionStorage.getItem(k)||localStorage.getItem(k)||''}
 
-  // Generate our own lightweight click/session id (not Google)
+  function store(k,v){
+    if(!v) return;
+    try{localStorage.setItem(k,v)}catch(e){}
+    try{sessionStorage.setItem(k,v)}catch(e){}
+    setCookie(k,v,90);
+  }
+  function readStored(k){
+    return get(k) || getCookie(k) || (sessionStorage.getItem(k)||'') || (localStorage.getItem(k)||'') || '';
+  }
+
+  // our own lightweight click/session id (not Google)
   function getCid(){
     let cid = readStored('cid');
     if(!cid){
@@ -81,15 +86,18 @@
   }
   const CID = getCid();
 
-  // Only keep generic UTM params (no defaults, no Google IDs)
+  // store UTM params if present
   const UTM_KEYS = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'];
   UTM_KEYS.forEach(k=>{ const v=get(k); if(v){ store(k,v) }});
+
+  // store gclid if present (optional; from Google Ads)
+  const GCLID = get('gclid');
+  if(GCLID) store('gclid', GCLID);
 
   function getAffParamForHost(h){
     const cfg=AFF_HOSTS.find(x=>h===x.host||h.endsWith('.'+x.host));
     return cfg?cfg.param:DEFAULT_PARAM;
   }
-
   function isAffHost(hostname){
     return AFF_HOSTS.some(x=>hostname===x.host||hostname.endsWith('.'+x.host));
   }
@@ -97,15 +105,21 @@
   function decorate(urlStr,overrideParam){
     try{
       const url=new URL(urlStr,location.href);
-      const host=url.hostname;
-      if(!isAffHost(host)) return urlStr;
+      if(!isAffHost(url.hostname)) return urlStr;
 
-      const paramName=overrideParam||getAffParamForHost(host);
+      const paramName=overrideParam||getAffParamForHost(url.hostname);
 
-      // add our own click id if not present
+      // always set our own CID for affiliate tracking
       if(CID && !url.searchParams.has(paramName)) url.searchParams.set(paramName,CID);
 
-      // propagate existing UTM params if present in storage (no defaults)
+      // pass gclid if it exists (some partners accept click_id / s1)
+      const g = readStored('gclid');
+      if(g){
+        if(!url.searchParams.has('click_id')) url.searchParams.set('click_id', g);
+        if(!url.searchParams.has('s1')) url.searchParams.set('s1', g);
+      }
+
+      // propagate UTM params
       UTM_KEYS.forEach(k=>{
         const v = readStored(k);
         if(v && !url.searchParams.has(k)) url.searchParams.set(k,v);
@@ -117,18 +131,18 @@
     }
   }
 
-  // On-click decoration (capture phase, passive)
+  // decorate on click
   document.addEventListener('click',function(e){
     const a=e.target.closest('a[href]');
     if(!a) return;
+
     const href=a.getAttribute('href');
-    if(!href) return;
-    if(!/^https?:/i.test(href)) return;
+    if(!href || !/^https?:/i.test(href)) return;
 
     const decorated=decorate(href,a.getAttribute('data-aff-param')||'');
     if(decorated!==href) a.setAttribute('href',decorated);
 
-    // If it's an affiliate host, open safely in new tab (no GTM/GA events here)
+    // keep safety attributes for affiliate clicks
     try{
       const u=new URL(decorated,location.href);
       if(isAffHost(u.hostname)){
@@ -138,14 +152,15 @@
     }catch(err){}
   }, {capture:true,passive:true});
 })();
+
 /* ===== Loan calculator with offer matcher ===== */
 (function(){
   const offers = [
-    { name: "Credito-365", min: 100, max: 20000, link: "https://clickcrafter.eu/credito-365.mx/9is4591jin" },
-    { name: "Crezu", min: 100, max: 20000, link: "https://clickcrafter.eu/crezu.mx/9is4591jin" },
-    { name: "Credy", min: 1000, max: 30000, link: "https://clickcrafter.eu/credy.mx/9is4591jin" },
-    { name: "Dineria.mx", min: 1000, max: 35000, link: "https://clickcrafter.eu/dineria.mx/9is4591jin" },
-    { name: "Lanu.mx", min: 1000, max: 35000, link: "https://clickcrafter.eu/lanu.mx/9is4591jin" },
+    { name: "Credito-365", min: 100,  max: 20000,  link: "https://clickcrafter.eu/credito-365.mx/9is4591jin" },
+    { name: "Crezu",      min: 100,  max: 20000,  link: "https://clickcrafter.eu/crezu.mx/9is4591jin" },
+    { name: "Credy",      min: 1000, max: 30000,  link: "https://clickcrafter.eu/credy.mx/9is4591jin" },
+    { name: "Dineria.mx", min: 1000, max: 35000,  link: "https://clickcrafter.eu/dineria.mx/9is4591jin" },
+    { name: "Lanu.mx",    min: 1000, max: 35000,  link: "https://clickcrafter.eu/lanu.mx/9is4591jin" },
   ];
 
   const btn = document.getElementById("calcBtn");
@@ -155,6 +170,7 @@
     const amount = +document.getElementById("loanAmount").value;
     const days = +document.getElementById("loanDays").value;
     const rate = +document.getElementById("loanRate").value / 100;
+
     const resultEl = document.getElementById("loanResult");
     const matchWrap = document.getElementById("matchOffers");
 
@@ -167,6 +183,7 @@
 
     const total = amount * Math.pow(1 + rate, days);
     const overpay = total - amount;
+
     resultEl.innerHTML = `
 💰 <strong>Total a pagar:</strong> ${total.toFixed(2)} MXN<br>
 📈 <strong>Interés:</strong> ${overpay.toFixed(2)} MXN<br>
@@ -174,7 +191,6 @@
 `;
     resultEl.style.color = "#1e3a8a";
 
-    // === Offer matcher ===
     const matched = offers.filter(o => amount >= o.min && amount <= o.max);
     if(matched.length === 0){
       matchWrap.innerHTML = "<p>No matching offers found for that amount.</p>";
@@ -187,7 +203,7 @@
         ${matched.map(o=>`
           <div class="match-card">
             <span>${o.name}</span>
-            <a href="${o.link}" target="_blank" rel="nofollow noopener noreferrer">Apply</a>
+            <a href="${o.link}" target="_blank" rel="nofollow noopener noreferrer sponsored">Apply</a>
           </div>
         `).join("")}
       </div>
